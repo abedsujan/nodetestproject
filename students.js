@@ -4,7 +4,7 @@ let studentJson = jsonfile.readFileSync(file);
 
 class Students {
     constructor() {
-        this._studentList = studentJson;        
+        this._studentList = studentJson;
     }
     /**
      * Getlist should provide all students from database
@@ -68,17 +68,39 @@ class Students {
         try {
             this.isValidStudent(studentInfo);
             this._studentList.push(studentInfo);
-
-            jsonfile.writeFile(file, this._studentList, function (err) {
-                if (err) console.error(err)
-              })
-
-
-
+            this.writeToStudentJson(); // saving list into json file
             callback('Successful', errorCallback);
         } catch (error) {
             callback(succcessCallack, error.message);
         }
+    }
+
+    removeStudent(studentName, callback) {
+
+        let succcessCallack;
+        let errorCallback;
+        try {
+            const studentIndex = this._studentList.findIndex(student => student.name.toLowerCase() === studentName.toLowerCase());
+
+            console.log('studentIndex', studentIndex);
+            if (studentIndex >= 0) {
+                this._studentList.splice(studentIndex, 1);
+                
+                this.writeToStudentJson();  // saving list into json file
+            } else {
+                throw new Error("Student not found");
+            }
+
+            callback('Successfully Deleted', errorCallback);
+        } catch (error) {
+            callback(succcessCallack, error.message);
+        }
+    }
+
+    writeToStudentJson() {
+        jsonfile.writeFile(file, this._studentList, function (err) {
+            if (err) console.error(err)
+        })
     }
 
 }
