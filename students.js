@@ -1,13 +1,11 @@
+const jsonfile = require('jsonfile')
+const file = 'students.json';
+let studentJson = jsonfile.readFileSync(file);
+
 class Students {
     constructor() {
-        this._studentList = [
-            { "name": "Hakki", "classId": '08', "email": "adahbour54@gmail.com", "phone": "(263) 972-6043" },
-            { "name": "Keerthika devi Alampalli", "classId": '08', "email": "keerthi1822@gmail.com", "phone": "(745) 285-6338" },
-            { "name": "Rieko", "classId": '08', "email": "adahbour54@gmail.com", "phone": "(971) 436-6442" },
-            { "name": "Sheila Qasemi", "classId": '08', "email": "sheilaqasemi2018@gmail.com", "phone": "(457) 527-9154" },
-        ];
+        this._studentList = studentJson;        
     }
-     
     /**
      * Getlist should provide all students from database
      * 
@@ -29,6 +27,12 @@ class Students {
         }));
     }
 
+    getStudentDetailByEmail(email) {
+
+        return this._studentList.filter((student => {
+            return student.email.toLowerCase() == email.toLowerCase()
+        }));
+    }
     isValidStudent(new_student) {
         if (
             new_student.hasOwnProperty("name") &&
@@ -36,6 +40,11 @@ class Students {
             new_student.hasOwnProperty("classId") &&
             new_student.hasOwnProperty("phone")
         ) {
+
+            if (new_student.name.length <= 2) {
+                throw new Error("Name too short");
+            }
+
             const result = this.getStudentDetailByName(new_student.name);
 
             if (result.length == 0) {
@@ -59,6 +68,13 @@ class Students {
         try {
             this.isValidStudent(studentInfo);
             this._studentList.push(studentInfo);
+
+            jsonfile.writeFile(file, this._studentList, function (err) {
+                if (err) console.error(err)
+              })
+
+
+
             callback('Successful', errorCallback);
         } catch (error) {
             callback(succcessCallack, error.message);

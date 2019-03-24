@@ -1,30 +1,96 @@
 var express = require('express');
 const Students = require('./students');
+const bodyParser = require('body-parser');
+
+const port = 8001;
 
 const hyf_students = new Students();
 
 const app = express();
-const port = 8001;
+const router = express.Router();
+
+
+var logger = function (req, res, next) {
+    console.info(`GOT REQUEST! ${req.method} ${req.originalUrl}`)
+    next(); // Passing the request to the next handler in the stack.
+}
+
+app.use(logger);
+
+app.use(bodyParser.urlencoded({
+    extended: true
+}));
+app.use(bodyParser.json())
 
 app.get('/', (req, res) => res.send('HYF api'))
 
-app.get('/students', (req, res) => {
+router.route('/students/:studentName')
+    .get((req, res) => {
 
-    if (req.query.name) {
-        const student = hyf_students.getStudentDetailByName(req.query.name);
-
+        const student = hyf_students.getStudentDetailByName(req.params.studentName);
         if (student.length > 0) {
             res.send(student);
         } else {
             res.status(404);
             res.send('Student does not exits!');
         }
+    });
 
-    } else {
-        res.send(hyf_students.getList());
-    }
+router.route('/students')
+    .get((req, res) => {
+        if (req.query.name) {
+            const student = hyf_students.getStudentDetailByName(req.query.name);
+            if (student.length > 0) {
+                res.send(student);
+            } else {
+                res.status(404);
+                res.send('Student does not exits!');
+            }
+        }
+       else if (req.query.email) {
+            const student = hyf_students.getStudentDetailByEmail(req.query.email);
+            if (student.length > 0) {
+                res.send(student);
+            } else {
+                res.status(404);
+                res.send('Student does not exits!');
+            }
+        }
+        else {
+            res.send(hyf_students.getList());
+        }
+    })
+    .post((req, res) => {
+        hyf_students.addNewStudent(req.body, (succcessCallack, errorCallback) => {
 
-})
+            if (succcessCallack) {
+                res.statusCode = 201;
+                res.send('Successful');
+            } else if (errorCallback) {
+                res.statusCode = 401;
+                res.send(errorCallback);
+            } else {
+                res.statusCode = 400;
+                res.send('Invalid request');
+            }
+        });
+    })
+    .put((req, res) => {
+
+    })
+    .delete((req, res) => {
+
+    });
+
+router.route('/teachers')
+    .get((req, res) => {
+        res.send('HYF teacher list');
+    })
+    .post((req, res) => {
+        res.send('HYF teacher list');
+    })
+
+app.use('/api', router);
 
 
 app.listen(port, () => console.log(`HYF app listening on port ${port}!`))
@@ -36,7 +102,7 @@ app.listen(port, () => console.log(`HYF app listening on port ${port}!`))
 //     if (url == '/') {
 //         res.send('Welcome to HYF app !!!!')
 //     } else if (url == '/getStudentsList' && req.method == 'GET') {
-//         const result = hyf_students.getList();
+//         const result = hyf_students.getList();´´
 //         if (result) {
 //             res.statusCode = 200;
 //             res.end(JSON.stringify(result));
